@@ -1,0 +1,150 @@
+/* SkuCrud.module.css */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.backButton {
+  background-color: #607d8b;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.backButton:hover {
+  background-color: #455a64;
+}
+
+.errorMessage {
+  color: #d32f2f;
+  margin: 15px 0;
+  padding: 10px;
+  background: #ffebee;
+  border-radius: 4px;
+}
+
+.form {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.formGroup {
+  margin-bottom: 15px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.submitButton {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.submitButton:hover {
+  background-color: #45a049;
+}
+
+.submitButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  background-color: #f44336;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancelButton:hover {
+  background-color: #d32f2f;
+}
+
+.skuList {
+  margin-top: 30px;
+}
+
+.skuList table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.skuList th,
+.skuList td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.skuList th {
+  background-color: #f2f2f2;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.editButton {
+  background-color: #FFC107;
+  color: black;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.deleteButton {
+  background-color: #f44336;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.loadingMessage {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.emptyMessage {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}

@@ -1,0 +1,55 @@
+.price-table-container {
+    margin-top: 20px;
+    overflow-x: auto;
+}
+
+.price-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.price-table th, .price-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.price-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.price-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+.offers-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.offers-list li {
+    padding: 4px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.offers-list li:last-child {
+    border-bottom: none;
+}
+
+.offer-link {
+    margin-left: 8px;
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.offer-link:hover {
+    text-decoration: underline;
+}
+
+.offer-time {
+    margin-left: 8px;
+    color: #666;
+    font-size: 0.9em;
+}
