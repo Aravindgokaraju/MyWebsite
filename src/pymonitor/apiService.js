@@ -34,7 +34,7 @@ export const flowService = {
 
 // Execution endpoint
 export const executionService = {
-  executeScraping: (payload) => apiClient.post('/execute/', payload),
+  executeScraping: (payload) => apiClient.post('/scrape/', payload),
 };
 
 export const usersService = {
