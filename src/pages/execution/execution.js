@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';  // Add useEffect to the import
-import apiService from '../../pymonitor/apiService'; // Changed from named import to default import
-import styles from './ExecutionForm.module.css';  // Import the styles
+import { useState, useEffect } from 'react';
+import apiService from '../../pymonitor/apiService';
+import styles from './ExecutionForm.module.css';
 
 function ExecutionForm({ onBack }) {
   const [inputValue, setInputValue] = useState('');
@@ -9,8 +9,62 @@ function ExecutionForm({ onBack }) {
   const [success, setSuccess] = useState(false);
   const [skus, setSkus] = useState([]);
   const [flows, setFlows] = useState([]);
-  const [filteredFlows, setFilteredFlows] = useState([]); // Store filtered flows
+  const [filteredFlows, setFilteredFlows] = useState([]);
   const [executionResult, setExecutionResult] = useState(null);
+  const [currentJobId, setCurrentJobId] = useState(null);
+  const [pollingCount, setPollingCount] = useState(0);
+
+  // Polling effect
+  useEffect(() => {
+    if (!currentJobId) return;
+
+    const pollJobStatus = async () => {
+      try {
+        const response = await apiService.execution.getJob(currentJobId);
+        const jobData = response.data;
+
+        console.log('Polling job:', jobData.status, pollingCount);
+
+        if (jobData.status === 'completed') {
+          // Job completed successfully
+          setExecutionResult(jobData.result);
+          setSuccess(true);
+          setIsSubmitting(false);
+          setCurrentJobId(null); // Stop polling
+        } else if (jobData.status === 'failed') {
+          // Job failed
+          setError(jobData.error || 'Job failed');
+          setIsSubmitting(false);
+          setCurrentJobId(null); // Stop polling
+        } else if (jobData.status === 'queued' || jobData.status === 'started') {
+          // Job still processing, poll again after delay
+          if (pollingCount < 60) { // Max 60 polls (≈2 minutes)
+            setTimeout(() => {
+              setPollingCount(prev => prev + 1);
+            }, 2000); // Poll every 2 seconds
+          } else {
+            // Timeout after 2 minutes
+            setError('Job timeout - taking too long to complete');
+            setIsSubmitting(false);
+            setCurrentJobId(null);
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+        if (pollingCount < 10) { // Retry on transient errors
+          setTimeout(() => {
+            setPollingCount(prev => prev + 1);
+          }, 2000);
+        } else {
+          setError('Failed to check job status');
+          setIsSubmitting(false);
+          setCurrentJobId(null);
+        }
+      }
+    };
+
+    pollJobStatus();
+  }, [currentJobId, pollingCount]);
 
   useEffect(() => {
     if (inputValue.trim() === '') {
@@ -31,6 +85,8 @@ function ExecutionForm({ onBack }) {
     setSkus([]);
     setFlows([]);
     setExecutionResult(null);
+    setCurrentJobId(null);
+    setPollingCount(0);
 
     try {
       // Execute all requests in parallel
@@ -38,41 +94,39 @@ function ExecutionForm({ onBack }) {
         apiService.sku.getAll(),
         apiService.flow.getAllFlows()
       ]);
-      console.log('SKUs:', skusResponse.data);
-      console.log('Flows:', flowsResponse.data.data);
+      
       setSkus(skusResponse.data);
       const fetchedFlows = flowsResponse.data.data || [];
       setFlows(fetchedFlows);
 
-
-      // Then execute scraping with a selected flow
-            const flowsToExecute = inputValue.trim() 
+      // Then execute scraping
+      const flowsToExecute = inputValue.trim() 
         ? fetchedFlows.filter(flow => 
             flow.name.toLowerCase().includes(inputValue.toLowerCase())
           )
         : fetchedFlows;
 
-      if (fetchedFlows.length > 0) {
+      if (flowsToExecute.length > 0) {
         const executionResponse = await apiService.execution.executeScraping({
-            skus: skusResponse.data,
-            flows: flowsToExecute
+          skus: skusResponse.data,
+          flows: flowsToExecute
         });
-        setExecutionResult(executionResponse.data);
+        
+        // Start polling for this job
+        setCurrentJobId(executionResponse.data.job_id);
+        
       } else {
-        console.log(flowsToExecute)
         throw new Error('No flows available to execute');
       }
 
-      setSuccess(true);
     } catch (error) {
       console.error('API Error:', error);
       setError(error.drfMessage || error.message || 'Failed to complete operations');
-    } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
+return (
     <div className={styles.container}>
       <h1>Text Input Form</h1>
       <form className={styles.form} onSubmit={handleSubmit}>
@@ -101,6 +155,16 @@ function ExecutionForm({ onBack }) {
         >
           {isSubmitting ? 'Submitting...' : 'Submit'}
         </button>
+        
+        {/* Polling Status Indicator */}
+        {isSubmitting && currentJobId && (
+          <div className={styles.pollingStatus}>
+            <div className={styles.loadingSpinner}></div>
+            <p>
+              {pollingCount === 0 ? 'Job queued...' : `Processing... (${pollingCount})`}
+            </p>
+          </div>
+        )}
         
         {error && <div className={styles.errorMessage}>{error}</div>}
         {success && <div className={styles.successMessage}>Submitted successfully!</div>}

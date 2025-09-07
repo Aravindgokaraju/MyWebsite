@@ -29,12 +29,14 @@ export const flowService = {
   getFlowByName: (id) => apiClient.get(`/flows/get/${id}/`),
   getAllFlows: () => apiClient.get('/flows/'),
   partialUpdateFlow: (flowId, updateData) => apiClient.patch(`/flows/update/${flowId}/`, updateData),
-  deleteFlow: (id) => apiClient.delete(`/flows/delete/${id}/`)
+  deleteFlow: (id) => apiClient.delete(`/flows/delete/${id}/`),
 };
 
 // Execution endpoint
 export const executionService = {
   executeScraping: (payload) => apiClient.post('/scrape/', payload),
+  getJob: (id) => apiClient.get(`job-result/${id}/`),
+
 };
 
 export const usersService = {
