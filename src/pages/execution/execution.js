@@ -38,10 +38,10 @@ function ExecutionForm({ onBack }) {
           setCurrentJobId(null); // Stop polling
         } else if (jobData.status === 'queued' || jobData.status === 'started') {
           // Job still processing, poll again after delay
-          if (pollingCount < 60) { // Max 60 polls (≈2 minutes)
+          if (pollingCount < 30) { // Max 60 polls (≈2 minutes)
             setTimeout(() => {
               setPollingCount(prev => prev + 1);
-            }, 2000); // Poll every 2 seconds
+            }, 10000); // Poll every 2 seconds
           } else {
             // Timeout after 2 minutes
             setError('Job timeout - taking too long to complete');
