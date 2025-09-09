@@ -128,7 +128,27 @@ function ExecutionForm({ onBack }) {
 
 return (
     <div className={styles.container}>
-      <h1>Text Input Form</h1>
+      <h1>Automated Scraping Execution</h1>
+      
+      <div className={styles.description}>
+        <p>
+          <strong>Local Execution Mode:</strong> For resource efficiency, the scraping execution 
+          needs to connect directly to your local machine to run the mock chrome driver. This saves cloud resources and ensures 
+          optimal performance for data-intensive operations. I have a docker container on my local machine that runs the worker 
+          container which sends the data to the services on the cloud. Execution will not work unless the Dockerfile.chromedriver is up and running
+        
+        </p>
+        <p>
+          The scraping works by taking the irregular website template objects from atlas, and plugging in the skus from sql to these templates.
+          A template is a one time setup where you outline the path a user would take to get to a sku so that the code can repeat the steps for all skus.
+        
+        </p>
+        <p>
+          Click "Execute Scraping" to run the process using your local computing power.
+        </p>
+        
+      </div>
+
       <form className={styles.form} onSubmit={handleSubmit}>
         <button 
           onClick={onBack} 
@@ -137,23 +157,12 @@ return (
           Back to Home
         </button>
         
-        <label htmlFor="text-input">Enter your text:</label>
-        <input
-          type="text"
-          id="text-input"
-          className={styles.input}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Type something..."
-          disabled={isSubmitting}
-        />
-        
         <button 
           type="submit" 
           className={styles.submitButton}
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Submitting...' : 'Submit'}
+          {isSubmitting ? 'Executing...' : 'Execute Scraping'}
         </button>
         
         {/* Polling Status Indicator */}
@@ -161,13 +170,13 @@ return (
           <div className={styles.pollingStatus}>
             <div className={styles.loadingSpinner}></div>
             <p>
-              {pollingCount === 0 ? 'Job queued...' : `Processing... (${pollingCount})`}
+              {pollingCount === 0 ? 'Connecting to local worker...' : `Processing locally... (${pollingCount})`}
             </p>
           </div>
         )}
         
         {error && <div className={styles.errorMessage}>{error}</div>}
-        {success && <div className={styles.successMessage}>Submitted successfully!</div>}
+        {success && <div className={styles.successMessage}>Execution completed successfully!</div>}
       </form>
       
       {/* Display the fetched data */}
@@ -195,6 +204,7 @@ return (
       </div>
     </div>
   );
+
 }
 
 export default ExecutionForm;
