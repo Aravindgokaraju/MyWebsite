@@ -3,7 +3,7 @@ import axios from 'axios';
 import { getCookie } from '../utils/cookies'; // Helper to get Django CSRF token
 
 // Determine base URL based on environment
-// const baseURL = process.env.REACT_APP_BASE_URL || 'http://localhost:8000/';
+// const baseURL ='http://localhost:8000/';
 const baseURL = "https://pymonitorapi.onrender.com"
 console.log('API Base URL:', baseURL); // Debug logging
 

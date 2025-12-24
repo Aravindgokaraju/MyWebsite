@@ -264,10 +264,6 @@ const handleJsonCancel = () => {
     return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>Flow Configuration</h1>
-        <button onClick={onBack} className={styles.backButton}>
-          Back to Home
-        </button>
       </div>
       
       {error && <div className={styles.errorMessage}>{error}</div>}

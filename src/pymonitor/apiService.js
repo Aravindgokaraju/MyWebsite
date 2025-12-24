@@ -3,7 +3,7 @@ import apiClient from './apiClient';
 
 // SKU endpoints (from ViewSet)
 export const skuService = {
-  getAll: () => apiClient.get('/skus'),
+  getAll: () => apiClient.get('/skus/'),
   getById: (id) => apiClient.get(`/skus/${id}/`),
   create: (data) => apiClient.post('/skus/', data),
   update: (id, data) => apiClient.put(`/skus/${id}/`, data),

@@ -1,101 +1,98 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import apiService from '../../pymonitor/apiService';
-import styles from './PriceDataViewer.module.css'; // Correct import syntax
+import styles from './PriceDataViewer.module.css';
 
-const PriceDataViewer = ({ onBack }) => {
-    const [priceData, setPriceData] = useState(null);
+const PriceDataViewer = () => {
+    const [priceData, setPriceData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
     const handleFetchPriceData = async () => {
         setIsLoading(true);
         setError(null);
-        setPriceData(null);
-
         try {
             const response = await apiService.priceData.getSorted();
-            console.log('Price Data:', response.data);
-            setPriceData(response.data);
+            setPriceData(response.data || []);
         } catch (err) {
-            console.error('Error fetching price data:', err);
             setError(err.message || 'Failed to fetch price data');
         } finally {
             setIsLoading(false);
         }
     };
 
+    const getSafeUrl = (url) => {
+        if (!url || url.trim() === '') return null;
+        return (!url.startsWith('http://') && !url.startsWith('https://')) ? `https://${url}` : url;
+    };
+
+    const getHostname = (url) => {
+        try { return new URL(url).hostname; } 
+        catch { return url || 'N/A'; }
+    };
+
     return (
-        <div className={styles['price-data-container']}>
-            <div className={styles.header}>
-                <h1>Price Data Viewer</h1>
-                <button onClick={onBack} className={styles['back-button']}>
-                    Back to Home
+        <div className={styles['page-container']}>
+            {/* Cleaner Action Bar: Only one title and the button */}
+            <div className={styles.actionBar}>
+                
+                <button
+                    onClick={handleFetchPriceData}
+                    disabled={isLoading}
+                    className={`${styles.primaryButton} ${isLoading ? styles.loading : ''}`}
+                >
+                    {isLoading ? 'Refreshing...' : 'Refresh Data'}
                 </button>
             </div>
 
-            <button
-                onClick={handleFetchPriceData}
-                disabled={isLoading}
-                className={styles['fetch-button']}
-            >
-                {isLoading ? 'Loading...' : 'Fetch Best Prices'}
-            </button>
+            {error && <div className={styles.errorBanner}>{error}</div>}
 
-            {error && <div className={styles['error-message']}>{error}</div>}
+            <div className={styles.contentCard}>
+                {!priceData.length && !isLoading && (
+                    <div className={styles.emptyState}>
+                        <p>No data loaded. Use the button above to fetch latest prices.</p>
+                    </div>
+                )}
 
-            {priceData && (
-                <div className={styles['price-table-container']}>
-                    <table className={styles['price-table']}>
-                        <thead>
-                            <tr>
-                                <th>SKU</th>
-                                <th>Product Name</th>
-                                <th>Best Price</th>
-                                <th>Website</th>
-                                <th>All Offers</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {priceData.map((item) => (
-                                <tr key={item.sku_number}>
-                                    <td>{item.sku_number}</td>
-                                    <td>{item.product_name}</td>
-                                    <td>${item.best_price.toFixed(2)}</td>
-                                    <td>
-                                        <a
-                                            href={item.best_price_website}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            {new URL(item.best_price_website).hostname}
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <ul className={styles['offers-list']}>
-                                            {item.all_offers.map((offer, index) => (
-                                                <li key={index}>
-                                                    ${offer.price.toFixed(2)} -
-                                                    <a
-                                                        href={offer.website}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className={styles['offer-link']}
-                                                    >
-                                                        {new URL(offer.website).hostname}
-                                                    </a>
-                                                    <span className={styles['offer-time']}>
-                                                        ({new Date(offer.last_updated).toLocaleDateString()})
-                                                    </span>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </td>
+                {priceData.length > 0 && (
+                    <div className={styles.tableWrapper}>
+                        <table className={styles.priceTable}>
+                            <thead>
+                                <tr>
+                                    <th>SKU</th>
+                                    <th>Product Name</th>
+                                    <th>Best Price</th>
+                                    <th>Top Vendor</th>
+                                    <th>Market Offers</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+                            </thead>
+                            <tbody>
+                                {priceData.map((item) => (
+                                    <tr key={item.sku_number}>
+                                        <td className={styles.skuCell}>{item.sku_number}</td>
+                                        <td className={styles.nameCell}><strong>{item.product_name}</strong></td>
+                                        <td className={styles.priceCell}>${item.best_price.toFixed(2)}</td>
+                                        <td>
+                                            <a href={getSafeUrl(item.best_price_website)} target="_blank" rel="noopener noreferrer" className={styles.vendorLink}>
+                                                {getHostname(getSafeUrl(item.best_price_website))}
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <div className={styles.miniOfferList}>
+                                                {item.all_offers.slice(0, 3).map((offer, index) => (
+                                                    <div key={index} className={styles.miniOffer}>
+                                                        <span className={styles.offerPrice}>${offer.price.toFixed(2)}</span>
+                                                        <span className={styles.offerVendor}>{getHostname(getSafeUrl(offer.website))}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -1,70 +1,64 @@
-import { useState } from 'react';
-import apiService from '../../pymonitor/apiService';
-import './landingPage.css';
+import React from 'react';
+import styles from './landingPage.module.css';
+import apiService from '../../pymonitor/apiService'; // Changed from named import to default import
 
-function LandingPage({ onNavigate }) {
-  const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
+const LandingPage = () => {
+  // Logic for upgrade/downgrade (example)
   const handleUpgrade = async () => {
-    setIsLoading(true);
-    setMessage('');
     try {
       const response = await apiService.users.applyUpgrade();
-      setMessage(response.data.message || 'Premium upgrade successful!');
+      console.log('Upgrade successful:', response.data);
+
+      // Optional: refresh user state or show toast
+      alert('Upgraded to premium!');
     } catch (error) {
-      setMessage(error.response?.data?.error || 'Upgrade failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Upgrade failed:', error);
+      alert('Upgrade failed');
     }
   };
 
   const handleDowngrade = async () => {
-    setIsLoading(true);
-    setMessage('');
     try {
       const response = await apiService.users.applyDowngrade();
-      setMessage(response.data.message || 'Downgrade successful!');
+      console.log('Downgrade successful:', response.data);
+
+      alert('Downgraded to demo');
     } catch (error) {
-      setMessage(error.response?.data?.error || 'Downgrade failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Downgrade failed:', error);
+      alert('Downgrade failed');
     }
   };
-
   return (
-    <div className="landing-page">
-      <h1>Docker Ready PyMonitor</h1>
-      <p className="intro-text">
-        This is the sample deploy of PyMonitor. A webscraping app built on React, Django, Supabase for SQL and Atlas for Mongo db.
-        Containerized through docker, the app has a UI container, API container, and a worker container which can be run on the cloud but I chose
-        to run locally due to computational requirements to run chrome and no free tier being powerful enough to do so.
-      </p>
+    <div className={styles.container}>
+      <div className={styles.welcomeCard}>
+        <h2>System Overview</h2>
+        <p>Welcome to PyMonitor. Use the sidebar to manage your SKUs, Flows, and Price Data.</p>
 
-      <div className="button-container">
-        <button onClick={() => onNavigate('execution')}>Go to Execution Form</button>
-        <button onClick={() => onNavigate('skuCrud')}>SKU Management</button>
-        <button onClick={() => onNavigate('flowCrud')}>Flow Configuration</button>
-        <button onClick={() => onNavigate('PriceDataViewer')}>Price Data Viewer</button>
-        <button
-          onClick={handleUpgrade}
-          disabled={isLoading}
-          className="upgrade-button"
-        >
-          {isLoading ? 'Testing Premium...' : 'Test Premium Upgrade'}
-        </button>
-        <button
-          onClick={handleDowngrade}
-          disabled={isLoading}
-          className="upgrade-button"
-        >
-          {isLoading ? 'Testing Demo...' : 'Test Demo Downgrade'}
-        </button>
+        <div className={styles.statsGrid}>
+          <div className={styles.statBox}>
+            <span>Status</span>
+            <strong>Active</strong>
+          </div>
+          <div className={styles.statBox}>
+            <span>Tier</span>
+            <strong>Professional</strong>
+          </div>
+        </div>
       </div>
 
-      {message && <p className="status-message">{message}</p>}
+      <div className={styles.actionSection}>
+        <h3>Subscription Management</h3>
+        <div className={styles.buttonGroup}>
+          <button onClick={handleUpgrade} className={styles.upgradeBtn}>
+            Upgrade Plan
+          </button>
+          <button onClick={handleDowngrade} className={styles.downgradeBtn}>
+            Downgrade Plan
+          </button>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
 export default LandingPage;

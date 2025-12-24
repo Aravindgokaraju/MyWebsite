@@ -93,10 +93,6 @@ const SkuCrud = ({ onBack }) => {
  return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1>SKU Management</h1>
-        <button onClick={onBack} className={styles.backButton}>
-          Back to Home
-        </button>
       </div>
       
       {error && <div className={styles.errorMessage}>{error}</div>}
