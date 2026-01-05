@@ -4,6 +4,7 @@ import styles from './ExecutionForm.module.css';
 
 function ExecutionForm({ onBack }) {
   const [inputValue, setInputValue] = useState('');
+  const [pricesPosted, setPricesPosted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
@@ -30,7 +31,7 @@ function ExecutionForm({ onBack }) {
           setExecutionResult(jobData.result);
           setSuccess(true);
           setIsSubmitting(false);
-          setCurrentJobId(null); // Stop polling
+          // setCurrentJobId(null); // Stop polling
         } else if (jobData.status === 'failed') {
           // Job failed
           setError(jobData.error || 'Job failed');
@@ -67,16 +68,62 @@ function ExecutionForm({ onBack }) {
   }, [currentJobId, pollingCount]);
 
   useEffect(() => {
+    if (!executionResult?.data?.length) return;
+    if (pricesPosted) return;
+
+    console.log('Posting price data:', executionResult.data);
+
+    const postPrices = async () => {
+      for (const item of executionResult.data) {
+        try {
+          console.log('Posting:', item);
+
+          await apiService.priceData.create({
+            sku: item.sku,
+            website: item.website,
+            price: item.price
+          });
+
+          console.log(` Posted ${item.sku}`);
+        } catch (err) {
+          console.error(` Failed to post ${item.sku}`, err);
+        }
+      }
+
+      // ✅ cleanup ONLY after posting
+      setPricesPosted(true);
+      setCurrentJobId(null); // stop polling safely
+    };
+
+    postPrices();
+  }, [executionResult, pricesPosted]);
+
+
+
+  useEffect(() => {
     if (inputValue.trim() === '') {
       setFilteredFlows(flows);
     } else {
-      const filtered = flows.filter(flow => 
+      const filtered = flows.filter(flow =>
         flow.name.toLowerCase().includes(inputValue.toLowerCase())
       );
       setFilteredFlows(filtered);
     }
   }, [inputValue, flows]);
 
+
+  const postPriceData = async ({ sku, website, price }) => {
+    try {
+      await apiService.priceData.create({
+        sku,
+        website,
+        price
+      });
+      console.log(`PriceData updated for ${sku} @ ${website}`);
+    } catch (err) {
+      console.error(`Failed to post PriceData for ${sku}:`, err);
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -94,16 +141,16 @@ function ExecutionForm({ onBack }) {
         apiService.sku.getAll(),
         apiService.flow.getAllFlows()
       ]);
-      
+
       setSkus(skusResponse.data);
       const fetchedFlows = flowsResponse.data.data || [];
       setFlows(fetchedFlows);
 
       // Then execute scraping
-      const flowsToExecute = inputValue.trim() 
-        ? fetchedFlows.filter(flow => 
-            flow.name.toLowerCase().includes(inputValue.toLowerCase())
-          )
+      const flowsToExecute = inputValue.trim()
+        ? fetchedFlows.filter(flow =>
+          flow.name.toLowerCase().includes(inputValue.toLowerCase())
+        )
         : fetchedFlows;
 
       if (flowsToExecute.length > 0) {
@@ -111,10 +158,10 @@ function ExecutionForm({ onBack }) {
           skus: skusResponse.data,
           flows: flowsToExecute
         });
-        
+
         // Start polling for this job
         setCurrentJobId(executionResponse.data.job_id);
-        
+
       } else {
         throw new Error('No flows available to execute');
       }
@@ -126,45 +173,55 @@ function ExecutionForm({ onBack }) {
     }
   };
 
-return (
+  return (
     <div className={styles.container}>
       <h1>Automated Scraping Execution</h1>
-      
+
       <div className={styles.description}>
         <p>
-          <strong>Local Execution Mode:</strong> For resource efficiency, the scraping execution 
-          needs to connect directly to your local machine to run the mock chrome driver. This saves cloud resources and ensures 
-          optimal performance for data-intensive operations. I have a docker container on my local machine that runs the worker 
-          container which sends the data to the services on the cloud. Execution will not work unless the Dockerfile.chromedriver is up and running
-        
+          <strong>Local Execution Mode:</strong> 
         </p>
         <p>
-          The scraping works by taking the irregular website template objects from atlas, and plugging in the skus from sql to these templates.
+          The scraping works by taking the irregular website template objects from a database, and plugging in the skus from sql to these templates.
           A template is a one time setup where you outline the path a user would take to get to a sku so that the code can repeat the steps for all skus.
-        
+
         </p>
         <p>
-          Click "Execute Scraping" to run the process using your local computing power.
+          To run the local execution worker, download the execution package here:{' '}
+          <a
+            href="https://drive.google.com/file/d/1P7jlJosD-ZRTUpp86ApdyyEa6yjw1pOI/view?usp=sharing"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.downloadLink}
+          >
+            Click here for the execution zip
+          </a>
         </p>
-        
+        <p>
+          Download the zip, extract it and run the worker_main.exe file under dist/worker-dist in a command prompt.
+        </p>
+        <p>
+          Click "Execute Scraping" to queue the job to your local worker.
+        </p>
+
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        <button 
-          onClick={onBack} 
+        <button
+          onClick={onBack}
           className={styles.backButton}
         >
           Back to Home
         </button>
-        
-        <button 
-          type="submit" 
+
+        <button
+          type="submit"
           className={styles.submitButton}
           disabled={isSubmitting}
         >
           {isSubmitting ? 'Executing...' : 'Execute Scraping'}
         </button>
-        
+
         {/* Polling Status Indicator */}
         {isSubmitting && currentJobId && (
           <div className={styles.pollingStatus}>
@@ -174,11 +231,11 @@ return (
             </p>
           </div>
         )}
-        
+
         {error && <div className={styles.errorMessage}>{error}</div>}
         {success && <div className={styles.successMessage}>Execution completed successfully!</div>}
       </form>
-      
+
       {/* Display the fetched data */}
       <div className={styles.results}>
         {skus.length > 0 && (
@@ -187,14 +244,14 @@ return (
             <pre>{JSON.stringify(skus, null, 2)}</pre>
           </div>
         )}
-        
+
         {flows.length > 0 && (
           <div>
             <h3>Flows:</h3>
             <pre>{JSON.stringify(filteredFlows, null, 2)}</pre>
           </div>
         )}
-        
+
         {executionResult && (
           <div>
             <h3>Execution Result:</h3>
